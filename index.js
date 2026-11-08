@@ -8,8 +8,8 @@ function audioBufferToWav (buffer, opt) {
   var bitDepth = format === 3 ? 32 : 16
 
   var result
-  if (numChannels === 2) {
-    result = interleave(buffer.getChannelData(0), buffer.getChannelData(1))
+  if (numChannels > 1) {
+    result = interleave(buffer)
   } else {
     result = buffer.getChannelData(0)
   }
@@ -59,17 +59,21 @@ function encodeWAV (samples, format, sampleRate, numChannels, bitDepth) {
   return buffer
 }
 
-function interleave (inputL, inputR) {
-  var length = inputL.length + inputR.length
-  var result = new Float32Array(length)
+function interleave (buffer) {
+  var numChannels = buffer.numberOfChannels
+  var channels = []
+  for (var channel = 0; channel < numChannels; channel++) {
+    channels.push(buffer.getChannelData(channel))
+  }
 
+  var length = channels[0].length
+  var result = new Float32Array(length * numChannels)
   var index = 0
-  var inputIndex = 0
 
-  while (index < length) {
-    result[index++] = inputL[inputIndex]
-    result[index++] = inputR[inputIndex]
-    inputIndex++
+  for (var sample = 0; sample < length; sample++) {
+    for (channel = 0; channel < numChannels; channel++) {
+      result[index++] = channels[channel][sample]
+    }
   }
   return result
 }
